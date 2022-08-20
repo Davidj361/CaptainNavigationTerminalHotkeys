@@ -8,6 +8,29 @@ CNTH.Debug = false
 local hello = "Starting up!"
 
 
+-- config loading
+if CNTH.config == nil then
+  if not File.Exists(CNTH.Path .. "/config.json") then
+
+    -- create default config if there is no config file
+    CNTH.Config = dofile(CNTH.Path .. "/Lua/defaultconfig.lua")
+    File.Write(CNTH.Path .. "/config.json", json.serialize(CNTH.Config))
+
+  else
+
+    -- load existing config
+    CNTH.Config = json.parse(File.Read(CNTH.Path .. "/config.json"))
+
+    -- add missing entries
+    local defaultConfig = dofile(CNTH.Path .. "/Lua/defaultconfig.lua")
+    for key, value in pairs(defaultConfig) do
+      if CNTH.Config[key] == nil then
+        CNTH.Config[key] = value
+      end
+    end
+  end
+end
+
 
 if CLIENT then
 
@@ -18,11 +41,7 @@ if CLIENT then
   end
 
   CNTH.Log("[Client] "..hello)
-  CNTH.Angle = 2
-  -- LuaUserData.RegisterType("Barotrauma.GameMain")
-  -- local GameMain = LuaUserData.CreateStatic("Barotrauma.GameMain")
-  local Steering = Descriptors["Barotrauma.Items.Components.Steering"]
-  LuaUserData.MakeFieldAccessible(Steering, "maintainPosTickBox")
+  CNTH.Angle = 2 -- Degrees of turning directional sonar
   local Sonar = Descriptors["Barotrauma.Items.Components.Sonar"]
   LuaUserData.MakeFieldAccessible(Sonar, "useDirectionalPing")
   LuaUserData.MakeFieldAccessible(Sonar, "directionalModeSwitch")
@@ -31,10 +50,12 @@ if CLIENT then
 
 
   -- catch faulty user inputted key configs
-  local function tryKey()
-    if PlayerInput.KeyHit(Keys[CNTH.Config.logKey]) then
-      -- GameMain.Client.ShowLogButton.OnClicked.Invoke()
-    end
+  local function tryKey(key, f)
+    -- PlayerInput.KeyHit(Keys[CNTH.Config.yourHotkey])
+    a,b = pcall(function()
+        return PlayerInput[f](Keys[key])
+    end)
+    return b
   end
 
   -- Utilizes rotation matrix to rotate the unit vector
@@ -50,8 +71,7 @@ if CLIENT then
   Hook.Add("think", "CNTHhook",
            function()
 
-             if not Game.RoundStarted then return end
-             if Character.Controlled == nil then return end
+             if not CNTH.Config.toggleHotkeys or not Game.RoundStarted or Character.Controlled == nil then return end
              local struct = Character.Controlled.SelectedConstruction
              if struct == nil then return end
              local steerGui = struct.GetComponentString("Steering")
@@ -59,24 +79,31 @@ if CLIENT then
              local sonarGui = struct.GetComponentString("Sonar")
              if sonarGui == nil then return end
              if not Character.DisableControls and GUI.GUI.KeyboardDispatcher.Subscriber == nil then
-               if PlayerInput.KeyHit(Keys.F) then
+               if tryKey(CNTH.Config.toggleSonar, "KeyHit") then
                  sonarGui.SonarModeSwitch.Selected = not sonarGui.SonarModeSwitch.Selected
                  if sonarGui.SonarModeSwitch.Selected then
                    sonarGui.CurrentMode = sonarGui.Mode.Active
                  else
                    sonarGui.CurrentMode = sonarGui.Mode.Passive
                  end
-               elseif PlayerInput.KeyHit(Keys.G) then
+               end
+               if tryKey(CNTH.Config.sonarDirection, "KeyHit") then
                  sonarGui.useDirectionalPing = not sonarGui.useDirectionalPing;
                  sonarGui.directionalModeSwitch.Selected = not sonarGui.directionalModeSwitch.Selected
-               elseif PlayerInput.KeyHit(Keys.X) then
+               end
+               if tryKey(CNTH.Config.autoPilot, "KeyHit") then
                  steerGui.AutoPilot = not steerGui.AutoPilot
-               elseif PlayerInput.KeyDown(Keys.Q) then
+               end
+               if tryKey(CNTH.Config.sonarDirLeft, "KeyDown") then
                  rotatePing(sonarGui, math.rad(-CNTH.Angle))
-               elseif PlayerInput.KeyDown(Keys.E) then
+               end
+               if tryKey(CNTH.Config.sonarDirRight, "KeyDown") then
                  rotatePing(sonarGui, math.rad(CNTH.Angle))
                end
              end
   end)
+
+  -- Add a GUI for configuration
+  dofile(CNTH.Path .. "/Lua/configGui.lua")
 
 end
