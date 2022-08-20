@@ -18,6 +18,7 @@ if CLIENT then
   end
 
   CNTH.Log("[Client] "..hello)
+  CNTH.Angle = 2
   -- LuaUserData.RegisterType("Barotrauma.GameMain")
   -- local GameMain = LuaUserData.CreateStatic("Barotrauma.GameMain")
   local Steering = Descriptors["Barotrauma.Items.Components.Steering"]
@@ -37,8 +38,8 @@ if CLIENT then
   end
 
   -- Utilizes rotation matrix to rotate the unit vector
-  local function rotatePing(a, sonarGui)
-    if PlayerInput.KeyDown(InputType.Run) then a = a*4 end
+  local function rotatePing(sonarGui, a)
+    if PlayerInput.KeyDown(InputType.Run) then a = a*2 end
     local dir = sonarGui.pingDirection
     local v = Vector2(0,0)
     v.x = ( dir.x * math.cos(a) ) - ( dir.y * math.sin(a) )
@@ -48,6 +49,7 @@ if CLIENT then
 
   Hook.Add("think", "CNTHhook",
            function()
+
              if not Game.RoundStarted then return end
              if Character.Controlled == nil then return end
              local struct = Character.Controlled.SelectedConstruction
@@ -57,20 +59,22 @@ if CLIENT then
              local sonarGui = struct.GetComponentString("Sonar")
              if sonarGui == nil then return end
              if not Character.DisableControls and GUI.GUI.KeyboardDispatcher.Subscriber == nil then
-               if PlayerInput.KeyHit(Keys.R) then
+               if PlayerInput.KeyHit(Keys.F) then
                  sonarGui.SonarModeSwitch.Selected = not sonarGui.SonarModeSwitch.Selected
                  if sonarGui.SonarModeSwitch.Selected then
                    sonarGui.CurrentMode = sonarGui.Mode.Active
                  else
                    sonarGui.CurrentMode = sonarGui.Mode.Passive
                  end
-               elseif PlayerInput.KeyHit(Keys.F) then
+               elseif PlayerInput.KeyHit(Keys.G) then
                  sonarGui.useDirectionalPing = not sonarGui.useDirectionalPing;
                  sonarGui.directionalModeSwitch.Selected = not sonarGui.directionalModeSwitch.Selected
+               elseif PlayerInput.KeyHit(Keys.X) then
+                 steerGui.AutoPilot = not steerGui.AutoPilot
                elseif PlayerInput.KeyDown(Keys.Q) then
-                 rotatePing(math.rad(-1), sonarGui)
+                 rotatePing(sonarGui, math.rad(-CNTH.Angle))
                elseif PlayerInput.KeyDown(Keys.E) then
-                 rotatePing(math.rad(1), sonarGui)
+                 rotatePing(sonarGui, math.rad(CNTH.Angle))
                end
              end
   end)
