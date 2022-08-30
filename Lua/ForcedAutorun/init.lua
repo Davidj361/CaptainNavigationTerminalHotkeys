@@ -71,7 +71,7 @@ if CLIENT then
   Hook.Add("think", "CNTHhook",
            function()
 
-             if not CNTH.Config.toggleHotkeys or not Game.RoundStarted or Character.Controlled == nil then return end
+             if not CNTH.Config.toggleHotkeys or Character.Controlled == nil then return end
              local struct = Character.Controlled.SelectedConstruction
              if struct == nil then return end
              local steerGui = struct.GetComponentString("Steering")
