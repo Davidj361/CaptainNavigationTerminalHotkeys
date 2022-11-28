@@ -13,7 +13,7 @@ if CNTH.config == nil then
   if not File.Exists(CNTH.Path .. "/config.json") then
 
     -- create default config if there is no config file
-    CNTH.Config = dofile(CNTH.Path .. "/Lua/defaultconfig.lua")
+    CNTH.Config = dofile(CNTH.Path .. "/Lua/defaultConfig.lua")
     File.Write(CNTH.Path .. "/config.json", json.serialize(CNTH.Config))
 
   else
@@ -22,7 +22,7 @@ if CNTH.config == nil then
     CNTH.Config = json.parse(File.Read(CNTH.Path .. "/config.json"))
 
     -- add missing entries
-    local defaultConfig = dofile(CNTH.Path .. "/Lua/defaultconfig.lua")
+    local defaultConfig = dofile(CNTH.Path .. "/Lua/defaultConfig.lua")
     for key, value in pairs(defaultConfig) do
       if CNTH.Config[key] == nil then
         CNTH.Config[key] = value
