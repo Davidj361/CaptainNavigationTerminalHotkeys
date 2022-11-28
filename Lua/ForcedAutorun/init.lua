@@ -72,7 +72,7 @@ if CLIENT then
            function()
 
              if not CNTH.Config.toggleHotkeys or Character.Controlled == nil then return end
-             local struct = Character.Controlled.SelectedConstruction
+             local struct = Character.Controlled.SelectedItem
              if struct == nil then return end
              local steerGui = struct.GetComponentString("Steering")
              if steerGui == nil then return end
